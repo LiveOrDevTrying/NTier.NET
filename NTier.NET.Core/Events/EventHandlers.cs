@@ -1,4 +1,4 @@
-﻿using NTier.NET.Core.Models;
+﻿using NTier.NET.Core.Interfaces;
 using System.Threading.Tasks;
 
 namespace NTier.NET.Core.Events

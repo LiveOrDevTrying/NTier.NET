@@ -1,4 +1,5 @@
 ﻿using NTier.NET.Core.Enums;
+using NTier.NET.Core.Interfaces;
 
 namespace NTier.NET.Core.Models
 {

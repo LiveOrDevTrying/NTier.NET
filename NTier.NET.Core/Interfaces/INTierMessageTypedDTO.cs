@@ -1,4 +1,4 @@
-﻿namespace NTier.NET.Core.Models
+﻿namespace NTier.NET.Core.Interfaces
 {
     public interface INTierMessageTypedDTO<T> where T : INTierMessageDTO
     {

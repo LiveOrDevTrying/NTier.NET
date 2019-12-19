@@ -1,6 +1,6 @@
 ﻿using NTier.NET.Core.Interfaces;
 
-namespace NTier.NET.Core.Models
+namespace NTier.NET.Core.Interfaces
 {
     public interface INTierMessageDTO
     {

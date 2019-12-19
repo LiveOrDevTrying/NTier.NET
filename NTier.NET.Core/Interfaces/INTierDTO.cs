@@ -1,6 +1,6 @@
 ﻿using NTier.NET.Core.Enums;
 
-namespace NTier.NET.Core.Models
+namespace NTier.NET.Core.Interfaces
 {
     public interface INTierDTO
     {

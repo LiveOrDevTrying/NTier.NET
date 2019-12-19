@@ -8,6 +8,7 @@ using Tcp.NET.Core.Events.Args;
 using NTier.NET.Core.Events;
 using NTier.NET.Core.Enums;
 using NTier.NET.Core.Models;
+using NTier.NET.Core.Interfaces;
 
 namespace NTier.NET.Client
 {
