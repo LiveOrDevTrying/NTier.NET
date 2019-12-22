@@ -39,7 +39,7 @@ namespace NTier.NET.Client
 
         public virtual void SendMessageToMessageCache<T>(T message, bool isFromWebapp) where T : MessageDTO
         {
-            if (_client.IsConnected)
+            if (_client.IsRunning)
             {
                 switch (_parameters.NTierRegisterType)
                 {
@@ -163,7 +163,7 @@ namespace NTier.NET.Client
 
                 try
                 {
-                    if (!_client.IsConnected)
+                    if (!_client.IsRunning)
                     { 
                         _client.Connect(_parameters.Uri, _parameters.Port, _parameters.EndOfLineCharacters);
                     }

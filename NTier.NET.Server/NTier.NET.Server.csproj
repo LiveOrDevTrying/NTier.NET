@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="NTier.NET.Core" Version="1.0.1" />
-    <PackageReference Include="Tcp.NET.Server" Version="1.1.2" />
+    <PackageReference Include="Tcp.NET.Server" Version="1.1.3" />
   </ItemGroup>
 
   <ItemGroup>
