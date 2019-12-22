@@ -8,5 +8,6 @@ namespace NTier.NET.Client.Models
         int Port { get; set; }
         NTierRegisterType NTierRegisterType { get; set; }
         string Uri { get; set; }
+        int ReconnectIntervalMS { get; set; }
     }
 }

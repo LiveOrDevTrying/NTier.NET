@@ -9,14 +9,16 @@ using NTier.NET.Core.Events;
 using NTier.NET.Core.Enums;
 using NTier.NET.Core.Models;
 using NTier.NET.Core.Interfaces;
+using System.Threading;
 
 namespace NTier.NET.Client
 {
     public class NTierClient : INTierClient
     {
-        // R8D: ToDo Code in auto reconnect
         protected readonly ITcpNETClient _client;
         protected readonly IParameters _parameters;
+        protected readonly Timer _timer;
+        protected bool _isTimerRunning;
 
         private event NTierMessageEventHandler _nTierMessageEvent;
             
@@ -28,6 +30,11 @@ namespace NTier.NET.Client
             _client.ErrorEvent += OnErrorEvent;
             _client.MessageEvent += OnMessageEvent;
             _client.Connect(_parameters.Uri, _parameters.Port, _parameters.EndOfLineCharacters);
+
+            if (parameters.ReconnectIntervalMS > 0)
+            {
+                _timer = new Timer(OnTimerCallback, null, parameters.ReconnectIntervalMS, parameters.ReconnectIntervalMS);
+            }
         }
 
         public virtual void SendMessageToMessageCache<T>(T message, bool isFromWebapp) where T : MessageDTO
@@ -148,7 +155,25 @@ namespace NTier.NET.Client
             }
             return Task.CompletedTask;
         }
+        protected virtual void OnTimerCallback(object state)
+        {
+            if (!_isTimerRunning)
+            {
+                _isTimerRunning = true;
 
+                try
+                {
+                    if (!_client.IsConnected)
+                    { 
+                        _client.Connect(_parameters.Uri, _parameters.Port, _parameters.EndOfLineCharacters);
+                    }
+                }
+                catch
+                { }
+
+                _isTimerRunning = false;
+            }
+        }
         protected virtual void FireNTierMessageEvent(object sender, INTierMessageDTO message)
         {
             _nTierMessageEvent?.Invoke(sender, message);
@@ -162,6 +187,11 @@ namespace NTier.NET.Client
                 _client.ErrorEvent -= OnErrorEvent;
                 _client.MessageEvent -= OnMessageEvent;
                 _client.Dispose();
+            }
+
+            if (_timer != null)
+            {
+                _timer.Dispose();
             }
         }
 

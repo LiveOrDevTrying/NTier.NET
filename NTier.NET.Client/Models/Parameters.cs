@@ -8,5 +8,6 @@ namespace NTier.NET.Client.Models
         public string Uri { get; set; }
         public int Port { get; set; }
         public string EndOfLineCharacters { get; set; }
+        public int ReconnectIntervalMS { get; set; }
     }
 }
