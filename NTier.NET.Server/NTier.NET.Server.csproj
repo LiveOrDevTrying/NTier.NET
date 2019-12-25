@@ -13,12 +13,12 @@
     <RepositoryUrl>https://github.com/LiveOrDevTrying/NTier.NET</RepositoryUrl>
     <RepositoryType>Github Public</RepositoryType>
     <PackageTags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet 2.0 2.1 2.2 messaging services service</PackageTags>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NTier.NET.Core" Version="1.0.1" />
-    <PackageReference Include="Tcp.NET.Server" Version="1.1.3" />
+    <PackageReference Include="Tcp.NET.Server" Version="1.1.4" />
   </ItemGroup>
 
   <ItemGroup>
