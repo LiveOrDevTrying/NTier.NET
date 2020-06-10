@@ -1,13 +1,14 @@
 ﻿using NTier.NET.Core.Events;
-using NTier.NET.Core.Models;
 using System;
+using System.Threading.Tasks;
 
 namespace NTier.NET.Client
 {
     public interface INTierClient : IDisposable
     {
-        event NTierMessageEventHandler NTierMessageEvent;
+        event MessageEventHandler MessageEvent;
 
-        void SendMessageToMessageCache<T>(T message, bool isFromWebapp) where T : MessageDTO;
+        Task SendToServerAsync<T>(T instance) where T : class;
+        Task SendToServerAsync(string message);
     }
 }

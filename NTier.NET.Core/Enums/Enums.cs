@@ -1,16 +1,14 @@
 ﻿namespace NTier.NET.Core.Enums
 {
-    public enum NTierMessageType
+    public enum MessageType
     {
         FromService,
         FromProvider,
-        FromWebApp
     }
 
-    public enum NTierRegisterType
+    public enum RegisterType
     {
         Service,
         Provider,
-        WebApp
     }
 }

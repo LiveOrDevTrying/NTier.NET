@@ -6,8 +6,10 @@ using PHS.Networking.Enums;
 using PHS.Networking.Models;
 using PHS.Networking.Server.Enums;
 using PHS.Networking.Server.Events.Args;
+using PHS.Networking.Server.Services;
 using System;
 using System.Collections.Concurrent;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Tcp.NET.Server;
 using Tcp.NET.Server.Events.Args;
@@ -15,9 +17,9 @@ using Tcp.NET.Server.Models;
 
 namespace NTier.NET.Server
 {
-    public class NTierServer : INTierServer
+    public class NTierServerAuth<T> : INTierServer
     {
-        protected readonly ITcpNETServer _server;
+        protected readonly ITcpNETServerAuth<T> _server;
         protected readonly ConcurrentQueue<IConnectionServer> _connectionsToServices =
             new ConcurrentQueue<IConnectionServer>();
         protected readonly ConcurrentBag<IConnectionServer> _connectionsToProviders =
@@ -25,21 +27,50 @@ namespace NTier.NET.Server
         protected readonly ConcurrentDictionary<int, IConnectionServer> _connectionsUnregistered =
             new ConcurrentDictionary<int, IConnectionServer>();
 
-        public NTierServer(INTierServerParams parameters)
+        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService)
         {
-            _server = new TcpNETServer(new ParamsTcpServer
+            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
             {
                 ConnectionSuccessString = parameters.ConnectionSuccessString,
+                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
                 EndOfLineCharacters = "\r\n",
                 Port = parameters.Port
-            });
+            }, userService);
+            _server.ConnectionEvent += OnConnectionEvent;
+            _server.ErrorEvent += OnErrorEvent;
+            _server.MessageEvent += OnMessageEvent;
+            _server.ServerEvent += OnServerEvent;
+        }
+        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, X509Certificate certificate)
+        {
+            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
+            {
+                ConnectionSuccessString = parameters.ConnectionSuccessString,
+                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
+                EndOfLineCharacters = "\r\n",
+                Port = parameters.Port
+            }, userService, certificate);
+            _server.ConnectionEvent += OnConnectionEvent;
+            _server.ErrorEvent += OnErrorEvent;
+            _server.MessageEvent += OnMessageEvent;
+            _server.ServerEvent += OnServerEvent;
+        }
+        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, string certificateIssuedTo, StoreLocation storeLocation)
+        {
+            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
+            {
+                ConnectionSuccessString = parameters.ConnectionSuccessString,
+                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
+                EndOfLineCharacters = "\r\n",
+                Port = parameters.Port
+            }, userService, certificateIssuedTo, storeLocation);
             _server.ConnectionEvent += OnConnectionEvent;
             _server.ErrorEvent += OnErrorEvent;
             _server.MessageEvent += OnMessageEvent;
             _server.ServerEvent += OnServerEvent;
         }
 
-        protected virtual async Task OnMessageEvent(object sender, TcpMessageServerEventArgs args)
+        protected virtual async Task OnMessageEvent(object sender, TcpMessageServerAuthEventArgs<T> args)
         {
             switch (args.MessageEventType)
             {
@@ -105,11 +136,11 @@ namespace NTier.NET.Server
                     break;
             }
         }
-        protected virtual Task OnErrorEvent(object sender, TcpErrorServerEventArgs args)
+        protected virtual Task OnErrorEvent(object sender, TcpErrorServerAuthEventArgs<T> args)
         {
             return Task.CompletedTask;
         }
-        protected virtual Task OnConnectionEvent(object sender, TcpConnectionServerEventArgs args)
+        protected virtual Task OnConnectionEvent(object sender, TcpConnectionServerAuthEventArgs<T> args)
         {
             switch (args.ConnectionEventType)
             {

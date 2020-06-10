@@ -1,69 +1,93 @@
-﻿using NTier.NET.Client.Models;
-using Newtonsoft.Json;
-using PHS.Core.Enums;
-using PHS.Core.Models;
+﻿using Newtonsoft.Json;
+using NTier.NET.Client.Models;
+using NTier.NET.Core.Enums;
+using NTier.NET.Core.Events;
+using NTier.NET.Core.Models;
+using PHS.Networking.Enums;
+using PHS.Networking.Models;
+using System.Threading;
 using System.Threading.Tasks;
 using Tcp.NET.Client;
-using Tcp.NET.Core.Events.Args;
-using NTier.NET.Core.Events;
-using NTier.NET.Core.Enums;
-using NTier.NET.Core.Models;
-using NTier.NET.Core.Interfaces;
-using System.Threading;
+using Tcp.NET.Client.Events.Args;
+using Tcp.NET.Client.Models;
 
 namespace NTier.NET.Client
 {
     public class NTierClient : INTierClient
     {
         protected readonly ITcpNETClient _client;
-        protected readonly IParameters _parameters;
-        protected readonly Timer _timer;
+        protected readonly IParamsNTierClient _parameters;
+        protected Timer _timer;
         protected bool _isTimerRunning;
 
-        private event NTierMessageEventHandler _nTierMessageEvent;
+        private event MessageEventHandler _messageEvent;
             
-        public NTierClient(IParameters parameters)
+        public NTierClient(IParamsNTierClient parameters, string oauthToken = "")
         {
             _parameters = parameters;
-            _client = new TcpNETClient();
+            _client = string.IsNullOrWhiteSpace(oauthToken)
+                ? new TcpNETClient(new ParamsTcpClient
+                {
+                    EndOfLineCharacters = "\r\n",
+                    Port = _parameters.Port,
+                    Uri = _parameters.Uri,
+                    IsSSL = _parameters.IsSSL
+                })
+                : new TcpNETClient(new ParamsTcpClient
+                {
+                    EndOfLineCharacters = "\r\n",
+                    Port = _parameters.Port,
+                    Uri = _parameters.Uri,
+                    IsSSL = _parameters.IsSSL
+                }, oauthToken: oauthToken);
+
             _client.ConnectionEvent += OnConnectionEvent;
             _client.ErrorEvent += OnErrorEvent;
             _client.MessageEvent += OnMessageEvent;
-            _client.Connect(_parameters.Uri, _parameters.Port, _parameters.EndOfLineCharacters);
 
-            if (parameters.ReconnectIntervalMS > 0)
+            Task.Run(async () =>
             {
-                _timer = new Timer(OnTimerCallback, null, parameters.ReconnectIntervalMS, parameters.ReconnectIntervalMS);
-            }
+                try
+                {
+                    await _client.ConnectAsync();
+                }
+                catch
+                { }
+
+                if (parameters.ReconnectIntervalSec > 0)
+                {
+                    _timer = new Timer(OnTimerCallback, null, parameters.ReconnectIntervalSec * 1000, parameters.ReconnectIntervalSec * 1000);
+                }
+            });
+        }
+        public virtual async Task SendToServerAsync<T>(T instance) where T : class
+        {
+            await SendToServerAsync(JsonConvert.SerializeObject(instance));
         }
 
-        public virtual void SendMessageToMessageCache<T>(T message, bool isFromWebapp) where T : MessageDTO
+        public virtual async Task SendToServerAsync(string message)
         {
             if (_client.IsRunning)
             {
-                switch (_parameters.NTierRegisterType)
+                switch (_parameters.RegisterType)
                 {
-                    case NTierRegisterType.Service:
-                        _client.SendToServer(new PacketDTO
+                    case RegisterType.Service:
+                        await _client.SendToServerAsync(new Packet
                         {
-                            Action = (int)ActionType.SendToServer,
-                            Data = JsonConvert.SerializeObject(new NTierMessageDTO
+                            Data = JsonConvert.SerializeObject(new Message
                             {
-                                NTierMessageType = NTierMessageType.FromService,
-                                Message = message,
-                                IsFromWebapp = isFromWebapp
+                                MessageType = MessageType.FromService,
+                                Content = message
                             })
                         });
                         break;
-                    case NTierRegisterType.Provider:
-                        _client.SendToServer(new PacketDTO
+                    case RegisterType.Provider:
+                        await _client.SendToServerAsync(new Packet
                         {
-                            Action = (int)ActionType.SendToServer,
-                            Data = JsonConvert.SerializeObject(new NTierMessageDTO
+                            Data = JsonConvert.SerializeObject(new Message
                             {
-                                NTierMessageType = NTierMessageType.FromProvider,
-                                IsFromWebapp = isFromWebapp,
-                                Message = message
+                                MessageType = MessageType.FromProvider,
+                                Content = message
                             })
                         });
                         break;
@@ -73,68 +97,49 @@ namespace NTier.NET.Client
             }
         }
 
-        protected virtual Task OnMessageEvent(object sender, TcpMessageEventArgs args)
+        protected virtual Task OnMessageEvent(object sender, TcpMessageClientEventArgs args)
         {
             switch (args.MessageEventType)
             {
                 case MessageEventType.Sent:
                     break;
                 case MessageEventType.Receive:
-                    if (args.Message.Trim().ToLower() == "ping")
+                    FireMessageEvent(sender, new Message
                     {
-                        _client.SendToServer("pong");
-                    }
-                    else
-                    {
-                        FireNTierMessageEvent(sender, new NTierMessageDTO
-                        {
-                            IsFromWebapp = false,
-                            Message = new MessageDTO
-                            {
-                                Message = args.Message
-                            },
-                            NTierMessageType = NTierMessageType.FromService
-                        });
-                    }
+                        Content = args.Message,
+                        MessageType = MessageType.FromService
+                    });
                     break;
                 default:
                     break;
             }
             return Task.CompletedTask;
         }
-        protected virtual Task OnErrorEvent(object sender, TcpErrorEventArgs args)
+        protected virtual Task OnErrorEvent(object sender, TcpErrorClientEventArgs args)
         {
             return Task.CompletedTask;
 
         }
-        protected virtual Task OnConnectionEvent(object sender, TcpConnectionEventArgs args)
+        protected virtual async Task OnConnectionEvent(object sender, TcpConnectionClientEventArgs args)
         {
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
-                    switch (_parameters.NTierRegisterType)
+                    switch (_parameters.RegisterType)
                     {
-                        case NTierRegisterType.Service:
-                            _client.SendToServer(new PacketDTO
+                        case RegisterType.Service:
+                            await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
                             {
-                                Action = (int)ActionType.SendToServer,
-                                Data = JsonConvert.SerializeObject(new NTierRegisterDTO
-                                {
-                                    NTierMessageType = NTierMessageType.FromService,
-                                    NTierRegisterType = _parameters.NTierRegisterType
-                                })
-                            });
+                                MessageType = MessageType.FromService,
+                                RegisterType = _parameters.RegisterType
+                            }));
                             break;
-                        case NTierRegisterType.Provider:
-                            _client.SendToServer(new PacketDTO
+                        case RegisterType.Provider:
+                            await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
                             {
-                                Action = (int)ActionType.SendToServer,
-                                Data = JsonConvert.SerializeObject(new NTierRegisterDTO
-                                {
-                                    NTierMessageType = NTierMessageType.FromProvider,
-                                    NTierRegisterType = _parameters.NTierRegisterType
-                                })
-                            });
+                                MessageType = MessageType.FromProvider,
+                                RegisterType = _parameters.RegisterType
+                            }));
                             break;
                         default:
                             break;
@@ -142,18 +147,11 @@ namespace NTier.NET.Client
                     break;
                 case ConnectionEventType.Disconnect:
                     break;
-                case ConnectionEventType.ServerStart:
-                    break;
-                case ConnectionEventType.ServerStop:
-                    break;
                 case ConnectionEventType.Connecting:
-                    break;
-                case ConnectionEventType.MaxConnectionsReached:
                     break;
                 default:
                     break;
             }
-            return Task.CompletedTask;
         }
         protected virtual void OnTimerCallback(object state)
         {
@@ -161,22 +159,25 @@ namespace NTier.NET.Client
             {
                 _isTimerRunning = true;
 
-                try
+                Task.Run(async () =>
                 {
-                    if (!_client.IsRunning)
-                    { 
-                        _client.Connect(_parameters.Uri, _parameters.Port, _parameters.EndOfLineCharacters);
+                    try
+                    {
+                        if (!_client.IsRunning)
+                        {
+                            await _client.ConnectAsync();
+                        }
                     }
-                }
-                catch
-                { }
+                    catch
+                    { }
 
-                _isTimerRunning = false;
+                    _isTimerRunning = false;
+                });
             }
         }
-        protected virtual void FireNTierMessageEvent(object sender, INTierMessageDTO message)
+        protected virtual void FireMessageEvent(object sender, IMessage message)
         {
-            _nTierMessageEvent?.Invoke(sender, message);
+            _messageEvent?.Invoke(sender, message);
         }
 
         public virtual void Dispose()
@@ -195,15 +196,15 @@ namespace NTier.NET.Client
             }
         }
 
-        public event NTierMessageEventHandler NTierMessageEvent
+        public event MessageEventHandler MessageEvent
         {
             add
             {
-                _nTierMessageEvent += value;
+                _messageEvent += value;
             }
             remove
             {
-                _nTierMessageEvent -= value;
+                _messageEvent -= value;
             }
         }
     }

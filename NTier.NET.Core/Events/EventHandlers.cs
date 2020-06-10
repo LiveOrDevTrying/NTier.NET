@@ -1,7 +1,7 @@
-﻿using NTier.NET.Core.Interfaces;
+﻿using NTier.NET.Core.Models;
 using System.Threading.Tasks;
 
 namespace NTier.NET.Core.Events
 {
-    public delegate Task NTierMessageEventHandler(object sender, INTierMessageDTO message);
+    public delegate Task MessageEventHandler(object sender, IMessage message);
 }

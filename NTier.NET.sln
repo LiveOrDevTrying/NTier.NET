@@ -1,15 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.29609.76
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET", "NTier.NET\NTier.NET.csproj", "{BD0897D7-E312-46F2-8EEB-BCA25411915E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NTier.NET.Core", "NTier.NET.Core\NTier.NET.Core.csproj", "{C9B5E4A2-DF35-4654-BDE7-0F0DF9830B03}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET.Core", "NTier.NET.Core\NTier.NET.Core.csproj", "{C9B5E4A2-DF35-4654-BDE7-0F0DF9830B03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NTier.NET.Server", "NTier.NET.Server\NTier.NET.Server.csproj", "{7F276B9C-C9AA-46DD-BFEB-BEF171710399}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET.Server", "NTier.NET.Server\NTier.NET.Server.csproj", "{7F276B9C-C9AA-46DD-BFEB-BEF171710399}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NTier.NET.Client", "NTier.NET.Client\NTier.NET.Client.csproj", "{96C3E25A-2EE1-4DD2-BE44-48AA8748A8E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET.Client", "NTier.NET.Client\NTier.NET.Client.csproj", "{96C3E25A-2EE1-4DD2-BE44-48AA8748A8E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestApps", "TestApps", "{8CC75D43-23ED-47FA-A981-007A8AE44AA9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET.TestApps.Server", "TestApps\NTier.NET.TestApps.Server\NTier.NET.TestApps.Server.csproj", "{65F31DCD-E683-4447-99E9-A11877662A51}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NTier.NET.TestApps.Client", "TestApps\NTier.NET.TestApps.Client\NTier.NET.TestApps.Client.csproj", "{EA2A7183-73D2-4762-8B34-20AD71E54235}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,11 +39,23 @@ Global
 		{96C3E25A-2EE1-4DD2-BE44-48AA8748A8E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96C3E25A-2EE1-4DD2-BE44-48AA8748A8E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96C3E25A-2EE1-4DD2-BE44-48AA8748A8E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65F31DCD-E683-4447-99E9-A11877662A51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65F31DCD-E683-4447-99E9-A11877662A51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65F31DCD-E683-4447-99E9-A11877662A51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65F31DCD-E683-4447-99E9-A11877662A51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA2A7183-73D2-4762-8B34-20AD71E54235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA2A7183-73D2-4762-8B34-20AD71E54235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA2A7183-73D2-4762-8B34-20AD71E54235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA2A7183-73D2-4762-8B34-20AD71E54235}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{65F31DCD-E683-4447-99E9-A11877662A51} = {8CC75D43-23ED-47FA-A981-007A8AE44AA9}
+		{EA2A7183-73D2-4762-8B34-20AD71E54235} = {8CC75D43-23ED-47FA-A981-007A8AE44AA9}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {64E6242F-77CA-4CB6-B571-E1E89D292F9A}
+		SolutionGuid = {1057192C-61B8-478E-9683-B71AD30C4CAC}
 	EndGlobalSection
 EndGlobal
