@@ -11,7 +11,7 @@ namespace NTier.NET.TestApps.Client
     class Program
     {
         private static INTierClient _client;
-        private static IParameters _parameters;
+        private static IParamsNTierClient _parameters;
 
         static async Task Main(string[] args)
         {
@@ -85,7 +85,7 @@ namespace NTier.NET.TestApps.Client
                     _client = null;
                 }
 
-                _parameters = new Parameters
+                _parameters = new ParamsNTierClient
                 {
                     Port = 9345,
                     ReconnectIntervalSec = 12,

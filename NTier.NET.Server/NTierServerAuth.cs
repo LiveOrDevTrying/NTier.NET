@@ -41,7 +41,7 @@ namespace NTier.NET.Server
             _server.MessageEvent += OnMessageEvent;
             _server.ServerEvent += OnServerEvent;
         }
-        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, X509Certificate certificate)
+        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, byte[] certificate, string certificatePassword)
         {
             _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
             {
@@ -49,21 +49,7 @@ namespace NTier.NET.Server
                 ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
                 EndOfLineCharacters = "\r\n",
                 Port = parameters.Port
-            }, userService, certificate);
-            _server.ConnectionEvent += OnConnectionEvent;
-            _server.ErrorEvent += OnErrorEvent;
-            _server.MessageEvent += OnMessageEvent;
-            _server.ServerEvent += OnServerEvent;
-        }
-        public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, string certificateIssuedTo, StoreLocation storeLocation)
-        {
-            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
-            {
-                ConnectionSuccessString = parameters.ConnectionSuccessString,
-                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
-                EndOfLineCharacters = "\r\n",
-                Port = parameters.Port
-            }, userService, certificateIssuedTo, storeLocation);
+            }, userService, certificate, certificatePassword);
             _server.ConnectionEvent += OnConnectionEvent;
             _server.ErrorEvent += OnErrorEvent;
             _server.MessageEvent += OnMessageEvent;
