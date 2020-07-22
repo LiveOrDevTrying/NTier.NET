@@ -97,14 +97,14 @@ namespace NTier.NET.Client
             }
         }
 
-        protected virtual Task OnMessageEvent(object sender, TcpMessageClientEventArgs args)
+        protected virtual async Task OnMessageEvent(object sender, TcpMessageClientEventArgs args)
         {
             switch (args.MessageEventType)
             {
                 case MessageEventType.Sent:
                     break;
                 case MessageEventType.Receive:
-                    FireMessageEvent(sender, new Message
+                    await FireMessageEventAsync(sender, new Message
                     {
                         Content = args.Message,
                         MessageType = MessageType.FromService
@@ -113,7 +113,6 @@ namespace NTier.NET.Client
                 default:
                     break;
             }
-            return Task.CompletedTask;
         }
         protected virtual Task OnErrorEvent(object sender, TcpErrorClientEventArgs args)
         {
@@ -175,9 +174,12 @@ namespace NTier.NET.Client
                 });
             }
         }
-        protected virtual void FireMessageEvent(object sender, IMessage message)
+        protected virtual async Task FireMessageEventAsync(object sender, IMessage message)
         {
-            _messageEvent?.Invoke(sender, message);
+            if (_messageEvent != null)
+            {
+                await _messageEvent?.Invoke(sender, message);
+            }
         }
 
         public virtual void Dispose()
