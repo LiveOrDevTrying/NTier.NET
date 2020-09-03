@@ -44,21 +44,24 @@ namespace NTier.NET.Client
             _client.ConnectionEvent += OnConnectionEvent;
             _client.ErrorEvent += OnErrorEvent;
             _client.MessageEvent += OnMessageEvent;
-
-            Task.Run(async () =>
+        }
+        public virtual async Task StartAsync()
+        {
+            try
             {
-                try
-                {
-                    await _client.ConnectAsync();
-                }
-                catch
-                { }
+                await _client.ConnectAsync();
 
-                if (parameters.ReconnectIntervalSec > 0)
+                if (_parameters.ReconnectIntervalSec > 0)
                 {
-                    _timer = new Timer(OnTimerCallback, null, parameters.ReconnectIntervalSec * 1000, parameters.ReconnectIntervalSec * 1000);
+                    _timer = new Timer(OnTimerCallback, null, _parameters.ReconnectIntervalSec * 1000, _parameters.ReconnectIntervalSec * 1000);
                 }
-            });
+            }
+            catch
+            { }
+        }
+        public virtual async Task StopAsync()
+        {
+            await _client.DisconnectAsync();
         }
         public virtual async Task SendToServerAsync<T>(T instance) where T : class
         {

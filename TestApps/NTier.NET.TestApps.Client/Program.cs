@@ -95,6 +95,7 @@ namespace NTier.NET.TestApps.Client
 
                 _client = new NTierClient(_parameters);
                 _client.MessageEvent += OnNTierMessageEventAsync;
+                await _client.StartAsync();
             }
 
             await MenuAsync();

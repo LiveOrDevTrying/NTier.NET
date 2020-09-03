@@ -56,6 +56,16 @@ namespace NTier.NET.Server
             _server.ServerEvent += OnServerEvent;
         }
 
+        public virtual async Task StartAsync()
+        {
+            await _server.StartAsync();
+        }
+
+        public virtual async Task StopAsync()
+        {
+            await _server.StopAsync();
+        }
+
         protected virtual async Task OnMessageEvent(object sender, TcpMessageServerAuthEventArgs<T> args)
         {
             switch (args.MessageEventType)
