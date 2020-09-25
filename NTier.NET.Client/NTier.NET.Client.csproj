@@ -22,11 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NTier.NET.Core" Version="1.*" />
     <PackageReference Include="Tcp.NET.Client" Version="1.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\NTier.NET.Core\NTier.NET.Core.csproj" />
   </ItemGroup>
 
 </Project>
