@@ -17,9 +17,12 @@
     <ApplicationIcon>Logo.ico</ApplicationIcon>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="Logo.png" />
-  </ItemGroup>
+<ItemGroup>
+	<None Include="Logo.png">
+		<Pack>True</Pack>
+		<PackagePath></PackagePath>
+	</None>
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NTier.NET.Core" Version="1.*" />
