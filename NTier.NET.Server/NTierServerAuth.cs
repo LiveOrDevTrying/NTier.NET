@@ -161,7 +161,7 @@ namespace NTier.NET.Server
                 case ServerEventType.Start:
                     break;
                 case ServerEventType.Stop:
-                    _connectionsToServices.Clear();
+                    while (_connectionsToServices.TryDequeue(out var _)) { }
                     break;
                 default:
                     break;
