@@ -13,13 +13,10 @@
     <description>The client module for an easy to use and heavily customizable Tcp layer for N-Tier architecture.</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright 2020</copyright>
-    <tags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet 2.0 2.1 2.2 messaging services service liveordevtrying</tags>
+    <tags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying</tags>
     <dependencies>
-      <group targetFramework="netcoreapp2.1">
-        <dependency id="Microsoft.NETCore.App" version="2.1" />
         <dependency id="NTier.NET.Core" version="[1,2)" />
         <dependency id="Tcp.NET.Client" version="[1,2)" />
-      </group>
     </dependencies>
   </metadata>
   <files>
