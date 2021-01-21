@@ -16,10 +16,8 @@
     <PackageTags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying</PackageTags>
   </PropertyGroup>
 	
-  <ItemGroup>
-	  <PackageReference Include="Tcp.NET.Server" Version="1.*" />
-	  <PackageReference Include="NTier.NET.Core" Version="1.*" />
 	<ItemGroup>
+	    <PackageReference Include="NTier.NET.Core" Version="2.*" />
 		<PackageReference Include="Tcp.NET.Server" Version="2.*" />
 	</ItemGroup>
 	
