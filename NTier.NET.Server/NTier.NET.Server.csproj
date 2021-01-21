@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tcp.NET.Server" Version="1.*" />
+    <PackageReference Include="Tcp.NET.Server" Version="1.6.4" />
   </ItemGroup>
 
   <ItemGroup>
