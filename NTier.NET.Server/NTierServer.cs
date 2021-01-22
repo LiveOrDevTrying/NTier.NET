@@ -18,12 +18,12 @@ namespace NTier.NET.Server
     public class NTierServer : INTierServer
     {
         protected readonly ITcpNETServer _server;
-        protected readonly ConcurrentQueue<IConnectionServer> _connectionsToServices =
-            new ConcurrentQueue<IConnectionServer>();
-        protected readonly ConcurrentBag<IConnectionServer> _connectionsToProviders =
-            new ConcurrentBag<IConnectionServer>();
-        protected readonly ConcurrentDictionary<int, IConnectionServer> _connectionsUnregistered =
-            new ConcurrentDictionary<int, IConnectionServer>();
+        protected readonly ConcurrentQueue<IConnectionTcpServer> _connectionsToServices =
+            new ConcurrentQueue<IConnectionTcpServer>();
+        protected readonly ConcurrentBag<IConnectionTcpServer> _connectionsToProviders =
+            new ConcurrentBag<IConnectionTcpServer>();
+        protected readonly ConcurrentDictionary<int, IConnectionTcpServer> _connectionsUnregistered =
+            new ConcurrentDictionary<int, IConnectionTcpServer>();
 
         public NTierServer(INTierServerParams parameters)
         {
