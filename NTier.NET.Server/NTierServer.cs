@@ -86,21 +86,13 @@ namespace NTier.NET.Server
                                     if (_connectionsToServices.TryDequeue(out var connectionService))
                                     {
                                         _connectionsToServices.Enqueue(connectionService);
-                                        await _server.SendToConnectionAsync(new Packet
-                                        {
-                                            Data = args.Message,
-                                            Timestamp = DateTime.UtcNow
-                                        }, connectionService);
+                                        await _server.SendToConnectionAsync(args.Packet, connectionService);
                                     }
                                     break;
                                 case MessageType.FromService:
                                     foreach (var connectionToProvider in _connectionsToProviders)
                                     {
-                                        await _server.SendToConnectionAsync(new Packet
-                                        {
-                                            Data = args.Message,
-                                            Timestamp = DateTime.UtcNow
-                                        }, connectionToProvider);
+                                        await _server.SendToConnectionAsync(args.Packet, connectionToProvider);
                                     }
                                     break;
                                 default:
