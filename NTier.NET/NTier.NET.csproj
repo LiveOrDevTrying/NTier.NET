@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NTier.NET.Client" Version="2.*" />
-    <PackageReference Include="NTier.NET.Server" Version="2.*" />
+    <PackageReference Include="NTier.NET.Client" Version="2.1.*" />
+    <PackageReference Include="NTier.NET.Server" Version="2.1.*" />
   </ItemGroup>
 
 </Project>
