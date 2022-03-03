@@ -1,0 +1,3 @@
+[submodule "Resources/Tcp.NET"]
+	path = Resources/Tcp.NET
+	url = https://github.com/liveordevtrying/Tcp.NET

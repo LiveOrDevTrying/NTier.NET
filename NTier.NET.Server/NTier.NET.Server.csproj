@@ -1,29 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>2.1.0</Version>
+    <TargetFramework>net6.0</TargetFramework>
+    <Version>6.0.0</Version>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <Authors>Rob Engel - LiveOrDevTrying</Authors>
     <Company>Rob Engel - LiveOrDevTrying - Pixel Horror Studios</Company>
     <Description>The server module for an easy to use and heavily customizable Tcp layer for N-Tier architecture.</Description>
-    <Copyright>Copyright 2021</Copyright>
+    <Copyright>Copyright 2022</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LiveOrDevTrying/NTier.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/LiveOrDevTrying/NTier.NET</RepositoryUrl>
     <PackageIcon>Logo.png</PackageIcon>
     <RepositoryType>GitHub</RepositoryType>
-    <PackageTags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying</PackageTags>
+    <PackageTags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying tcp.net</PackageTags>
   </PropertyGroup>
 	
   <ItemGroup>
     <ProjectReference Include="..\NTier.Net.Core\NTier.Net.Core.csproj" />
+    <ProjectReference Include="..\Resources\Tcp.NET\Tcp.NET.Server\Tcp.NET.Server.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Tcp.NET.Server" Version="2.1.*" />
-	</ItemGroup>
-	
   <ItemGroup>
     <None Include="Logo.png">
       <Pack>True</Pack>
