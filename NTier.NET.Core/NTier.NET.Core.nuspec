@@ -12,8 +12,8 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The core module for an easy to use and heavily customizable Tcp layer for N-Tier architecture.</description>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright 2021</copyright>
-    <tags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying</tags>
+    <copyright>Copyright 2022</copyright>
+    <tags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying tcp.net</tags>
   </metadata>
   <files>
     <file src="Logo.png" target="" />

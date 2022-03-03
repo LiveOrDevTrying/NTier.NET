@@ -109,7 +109,7 @@ namespace NTier.NET.Client
                 case MessageEventType.Receive:
                     await FireMessageEventAsync(sender, new Message
                     {
-                        Content = args.Message,
+                        Content = args.Packet.Data,
                         MessageType = MessageType.FromService
                     });
                     break;
