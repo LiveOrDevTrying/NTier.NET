@@ -15,9 +15,9 @@
     <copyright>Copyright 2022</copyright>
     <tags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying tcp.net</tags>
     <dependencies>
-		<group targetFramework="net6.0">
-			<dependency id="NTier.NET.Core" version="[6.0,6.1)" />
-			<dependency id="Tcp.NET.Client" version="[6.0,6.1)" />
+		<group targetFramework="net5.0">
+			<dependency id="NTier.NET.Core" version="[5.0,5.1)" />
+			<dependency id="Tcp.NET.Client" version="[5.0,5.1)" />
 		</group>
     </dependencies>
   </metadata>
