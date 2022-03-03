@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NTier.NET" Version="6.0.*" />
+    <PackageReference Include="NTier.NET" Version="2.0.*" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <Authors>Rob Engel - LiveOrDevTrying</Authors>
     <Company>Rob Engel - LiveOrDevTrying - Pixel Horror Studios</Company>
@@ -13,7 +13,7 @@
     <PackageIcon>Logo.png</PackageIcon>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>N-Tier ntier tcp client server n-tier.net ntier.net async dotnet messaging services service liveordevtrying tcp.net</PackageTags>
-    <Version>6.0.0</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NTier.NET.Client" Version="6.0.*" />
-    <PackageReference Include="NTier.NET.Server" Version="6.0.*" />
+    <PackageReference Include="NTier.NET.Client" Version="2.0.*" />
+    <PackageReference Include="NTier.NET.Server" Version="2.0.*" />
   </ItemGroup>
 
 </Project>
