@@ -9,7 +9,6 @@ using PHS.Networking.Server.Events.Args;
 using PHS.Networking.Server.Services;
 using System;
 using System.Collections.Concurrent;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Tcp.NET.Server;
 using Tcp.NET.Server.Events.Args;
@@ -56,17 +55,17 @@ namespace NTier.NET.Server
             _server.ServerEvent += OnServerEvent;
         }
 
-        public virtual async Task StartAsync()
+        public virtual void Start()
         {
-            await _server.StartAsync();
+            _server.Start();
         }
 
-        public virtual async Task StopAsync()
+        public virtual void Stop()
         {
-            await _server.StopAsync();
+            _server.Stop();
         }
 
-        protected virtual async Task OnMessageEvent(object sender, TcpMessageServerAuthEventArgs<T> args)
+        protected virtual void OnMessageEvent(object sender, TcpMessageServerAuthEventArgs<T> args)
         {
             switch (args.MessageEventType)
             {
@@ -103,13 +102,19 @@ namespace NTier.NET.Server
                                     if (_connectionsToServices.TryDequeue(out var connectionService))
                                     {
                                         _connectionsToServices.Enqueue(connectionService);
-                                        await _server.SendToConnectionAsync(args.Packet, connectionService);
+                                        Task.Run(async () =>
+                                        {
+                                            await _server.SendToConnectionAsync(args.Packet, connectionService);
+                                        });
                                     }
                                     break;
                                 case MessageType.FromService:
                                     foreach (var connectionToProvider in _connectionsToProviders)
                                     {
-                                        await _server.SendToConnectionAsync(args.Packet, connectionToProvider);
+                                        Task.Run(async () =>
+                                        {
+                                            await _server.SendToConnectionAsync(args.Packet, connectionToProvider);
+                                        });
                                     }
                                     break;
                                 default:
@@ -124,11 +129,10 @@ namespace NTier.NET.Server
                     break;
             }
         }
-        protected virtual Task OnErrorEvent(object sender, TcpErrorServerAuthEventArgs<T> args)
+        protected virtual void OnErrorEvent(object sender, TcpErrorServerAuthEventArgs<T> args)
         {
-            return Task.CompletedTask;
         }
-        protected virtual Task OnConnectionEvent(object sender, TcpConnectionServerAuthEventArgs<T> args)
+        protected virtual void OnConnectionEvent(object sender, TcpConnectionServerAuthEventArgs<T> args)
         {
             switch (args.ConnectionEventType)
             {
@@ -143,10 +147,8 @@ namespace NTier.NET.Server
                 default:
                     break;
             }
-
-            return Task.CompletedTask;
         }
-        protected virtual Task OnServerEvent(object sender, ServerEventArgs args)
+        protected virtual void OnServerEvent(object sender, ServerEventArgs args)
         {
             switch (args.ServerEventType)
             {
@@ -158,8 +160,6 @@ namespace NTier.NET.Server
                 default:
                     break;
             }
-
-            return Task.CompletedTask;
         }
 
         public virtual void Dispose()
