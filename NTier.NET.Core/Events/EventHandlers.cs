@@ -3,5 +3,5 @@ using System.Threading.Tasks;
 
 namespace NTier.NET.Core.Events
 {
-    public delegate Task MessageEventHandler(object sender, IMessage message);
+    public delegate void MessageEventHandler(object sender, IMessage message);
 }
