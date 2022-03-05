@@ -59,9 +59,9 @@ namespace NTier.NET.Client
             catch
             { }
         }
-        public virtual async Task StopAsync()
+        public virtual void Stop()
         {
-            await _client.DisconnectAsync();
+            _client.Disconnect();
         }
         public virtual async Task SendToServerAsync<T>(T instance) where T : class
         {
@@ -100,14 +100,14 @@ namespace NTier.NET.Client
             }
         }
 
-        protected virtual async Task OnMessageEvent(object sender, TcpMessageClientEventArgs args)
+        protected virtual void OnMessageEvent(object sender, TcpMessageClientEventArgs args)
         {
             switch (args.MessageEventType)
             {
                 case MessageEventType.Sent:
                     break;
                 case MessageEventType.Receive:
-                    await FireMessageEventAsync(sender, new Message
+                    FireMessageEvent(sender, new Message
                     {
                         Content = args.Packet.Data,
                         MessageType = MessageType.FromService
@@ -117,35 +117,36 @@ namespace NTier.NET.Client
                     break;
             }
         }
-        protected virtual Task OnErrorEvent(object sender, TcpErrorClientEventArgs args)
+        protected virtual void OnErrorEvent(object sender, TcpErrorClientEventArgs args)
         {
-            return Task.CompletedTask;
-
         }
-        protected virtual async Task OnConnectionEvent(object sender, TcpConnectionClientEventArgs args)
+        protected virtual void OnConnectionEvent(object sender, TcpConnectionClientEventArgs args)
         {
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
-                    switch (_parameters.RegisterType)
+                    Task.Run(async () =>
                     {
-                        case RegisterType.Service:
-                            await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
-                            {
-                                MessageType = MessageType.FromService,
-                                RegisterType = _parameters.RegisterType
-                            }));
-                            break;
-                        case RegisterType.Provider:
-                            await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
-                            {
-                                MessageType = MessageType.FromProvider,
-                                RegisterType = _parameters.RegisterType
-                            }));
-                            break;
-                        default:
-                            break;
-                    }
+                        switch (_parameters.RegisterType)
+                        {
+                            case RegisterType.Service:
+                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
+                                {
+                                    MessageType = MessageType.FromService,
+                                    RegisterType = _parameters.RegisterType
+                                }));
+                                break;
+                            case RegisterType.Provider:
+                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
+                                {
+                                    MessageType = MessageType.FromProvider,
+                                    RegisterType = _parameters.RegisterType
+                                }));
+                                break;
+                            default:
+                                break;
+                        }
+                    });
                     break;
                 case ConnectionEventType.Disconnect:
                     break;
@@ -177,12 +178,9 @@ namespace NTier.NET.Client
                 });
             }
         }
-        protected virtual async Task FireMessageEventAsync(object sender, IMessage message)
+        protected virtual void FireMessageEvent(object sender, IMessage message)
         {
-            if (_messageEvent != null)
-            {
-                await _messageEvent?.Invoke(sender, message);
-            }
+            _messageEvent?.Invoke(sender, message);
         }
 
         public virtual void Dispose()

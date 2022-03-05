@@ -5,7 +5,7 @@ namespace NTier.NET.Server
 {
     public interface INTierServer : IDisposable
     {
-        Task StartAsync();
-        Task StopAsync();
+        void Start();
+        void Stop();
     }
 }
