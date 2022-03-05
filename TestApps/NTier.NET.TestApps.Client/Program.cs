@@ -118,13 +118,16 @@ namespace NTier.NET.TestApps.Client
             await MenuAsync();
         }
 
-        private static async Task OnNTierMessageEventAsync(object sender, IMessage message)
+        private static void OnNTierMessageEventAsync(object sender, IMessage message)
         {
             Console.WriteLine(JsonConvert.SerializeObject(message));
 
             if (_parameters.RegisterType == RegisterType.Service) 
             {
-                await _client.SendToServerAsync(message.Content);
+                Task.Run(async () =>
+                {
+                    await _client.SendToServerAsync(message.Content);
+                });
             }
         }
     }
