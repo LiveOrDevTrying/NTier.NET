@@ -19,22 +19,16 @@ namespace NTier.NET.Server
     public class NTierServerAuth<T> : INTierServer
     {
         protected readonly ITcpNETServerAuth<T> _server;
-        protected readonly ConcurrentQueue<IConnectionTcpServer> _connectionsToServices =
-            new ConcurrentQueue<IConnectionTcpServer>();
-        protected readonly ConcurrentBag<IConnectionTcpServer> _connectionsToProviders =
-            new ConcurrentBag<IConnectionTcpServer>();
-        protected readonly ConcurrentDictionary<int, IConnectionTcpServer> _connectionsUnregistered =
-            new ConcurrentDictionary<int, IConnectionTcpServer>();
+        protected readonly ConcurrentQueue<IdentityTcpServer<T>> _connectionsToServices =
+            new ConcurrentQueue<IdentityTcpServer<T>>();
+        protected readonly ConcurrentBag<IdentityTcpServer<T>> _connectionsToProviders =
+            new ConcurrentBag<IdentityTcpServer<T>>();
+        protected readonly ConcurrentDictionary<string, IdentityTcpServer<T>> _connectionsUnregistered =
+            new ConcurrentDictionary<string, IdentityTcpServer<T>>();
 
         public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService)
         {
-            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
-            {
-                ConnectionSuccessString = parameters.ConnectionSuccessString,
-                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
-                EndOfLineCharacters = "\r\n",
-                Port = parameters.Port
-            }, userService);
+            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth(parameters.Port, "\r\n", parameters.ConnectionSuccessString, parameters.ConnectionUnauthorizedString), userService);
             _server.ConnectionEvent += OnConnectionEvent;
             _server.ErrorEvent += OnErrorEvent;
             _server.MessageEvent += OnMessageEvent;
@@ -42,13 +36,7 @@ namespace NTier.NET.Server
         }
         public NTierServerAuth(INTierServerParamsAuth parameters, IUserService<T> userService, byte[] certificate, string certificatePassword)
         {
-            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth
-            {
-                ConnectionSuccessString = parameters.ConnectionSuccessString,
-                ConnectionUnauthorizedString = parameters.ConnectionUnauthorizedString,
-                EndOfLineCharacters = "\r\n",
-                Port = parameters.Port
-            }, userService, certificate, certificatePassword);
+            _server = new TcpNETServerAuth<T>(new ParamsTcpServerAuth(parameters.Port, "\r\n", parameters.ConnectionSuccessString, parameters.ConnectionUnauthorizedString), userService, certificate, certificatePassword);
             _server.ConnectionEvent += OnConnectionEvent;
             _server.ErrorEvent += OnErrorEvent;
             _server.MessageEvent += OnMessageEvent;
@@ -74,10 +62,10 @@ namespace NTier.NET.Server
                 case MessageEventType.Receive:
                     try
                     {
-                        if (_connectionsUnregistered.TryRemove(args.Connection.Client.GetHashCode(), out var tcpClient))
+                        if (_connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var tcpClient))
                         {
                             // Register the connection if it is new
-                            var registerDTO = JsonConvert.DeserializeObject<Register>(args.Packet.Data);
+                            var registerDTO = JsonConvert.DeserializeObject<Register>(args.Message);
 
                             switch (registerDTO.RegisterType)
                             {
@@ -94,7 +82,7 @@ namespace NTier.NET.Server
                         else
                         {
                             // When a Provider sends a message to the cache, round-robin send it to the processing server
-                            var deserialized = JsonConvert.DeserializeObject<Message>(args.Packet.Data);
+                            var deserialized = JsonConvert.DeserializeObject<Message>(args.Message);
 
                             switch (deserialized.MessageType)
                             {
@@ -104,7 +92,7 @@ namespace NTier.NET.Server
                                         _connectionsToServices.Enqueue(connectionService);
                                         Task.Run(async () =>
                                         {
-                                            await _server.SendToConnectionAsync(args.Packet, connectionService);
+                                            await _server.SendToConnectionAsync(args.Message, connectionService);
                                         });
                                     }
                                     break;
@@ -113,7 +101,7 @@ namespace NTier.NET.Server
                                     {
                                         Task.Run(async () =>
                                         {
-                                            await _server.SendToConnectionAsync(args.Packet, connectionToProvider);
+                                            await _server.SendToConnectionAsync(args.Message, connectionToProvider);
                                         });
                                     }
                                     break;
@@ -137,12 +125,10 @@ namespace NTier.NET.Server
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
-                    _connectionsUnregistered.TryAdd(args.Connection.Client.GetHashCode(), args.Connection);
+                    _connectionsUnregistered.TryAdd(args.Connection.ConnectionId, args.Connection);
                     break;
                 case ConnectionEventType.Disconnect:
-                    _connectionsUnregistered.TryRemove(args.Connection.Client.GetHashCode(), out var _);
-                    break;
-                case ConnectionEventType.Connecting:
+                    _connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var _);
                     break;
                 default:
                     break;
