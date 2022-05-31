@@ -9,7 +9,7 @@ namespace NTier.NET.Client
         event MessageEventHandler MessageEvent;
 
         Task StartAsync();
-        void Stop();
+        Task StopAsync();
 
         Task SendToServerAsync<T>(T instance) where T : class;
         Task SendToServerAsync(string message);

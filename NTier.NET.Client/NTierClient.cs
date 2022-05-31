@@ -4,7 +4,6 @@ using NTier.NET.Core.Enums;
 using NTier.NET.Core.Events;
 using NTier.NET.Core.Models;
 using PHS.Networking.Enums;
-using PHS.Networking.Models;
 using System.Threading;
 using System.Threading.Tasks;
 using Tcp.NET.Client;
@@ -26,20 +25,8 @@ namespace NTier.NET.Client
         {
             _parameters = parameters;
             _client = string.IsNullOrWhiteSpace(oauthToken)
-                ? new TcpNETClient(new ParamsTcpClient
-                {
-                    EndOfLineCharacters = "\r\n",
-                    Port = _parameters.Port,
-                    Uri = _parameters.Uri,
-                    IsSSL = _parameters.IsSSL
-                })
-                : new TcpNETClient(new ParamsTcpClient
-                {
-                    EndOfLineCharacters = "\r\n",
-                    Port = _parameters.Port,
-                    Uri = _parameters.Uri,
-                    IsSSL = _parameters.IsSSL
-                }, oauthToken: oauthToken);
+                ? new TcpNETClient(new ParamsTcpClient(_parameters.Uri, _parameters.Port, "\r\n", _parameters.IsSSL))
+                : new TcpNETClient(new ParamsTcpClient(_parameters.Uri, _parameters.Port, "\r\n", _parameters.IsSSL, token: oauthToken));
 
             _client.ConnectionEvent += OnConnectionEvent;
             _client.ErrorEvent += OnErrorEvent;
@@ -59,9 +46,9 @@ namespace NTier.NET.Client
             catch
             { }
         }
-        public virtual void Stop()
+        public virtual async Task StopAsync()
         {
-            _client.Disconnect();
+            await _client.DisconnectAsync();
         }
         public virtual async Task SendToServerAsync<T>(T instance) where T : class
         {
@@ -75,24 +62,18 @@ namespace NTier.NET.Client
                 switch (_parameters.RegisterType)
                 {
                     case RegisterType.Service:
-                        await _client.SendToServerAsync(new Packet
+                        await _client.SendAsync(JsonConvert.SerializeObject(new Message
                         {
-                            Data = JsonConvert.SerializeObject(new Message
-                            {
-                                MessageType = MessageType.FromService,
-                                Content = message
-                            })
-                        });
+                            MessageType = MessageType.FromService,
+                            Content = message
+                        }));
                         break;
                     case RegisterType.Provider:
-                        await _client.SendToServerAsync(new Packet
+                        await _client.SendAsync(JsonConvert.SerializeObject(new Message
                         {
-                            Data = JsonConvert.SerializeObject(new Message
-                            {
-                                MessageType = MessageType.FromProvider,
-                                Content = message
-                            })
-                        });
+                            MessageType = MessageType.FromProvider,
+                            Content = message
+                        }));
                         break;
                     default:
                         break;
@@ -109,7 +90,7 @@ namespace NTier.NET.Client
                 case MessageEventType.Receive:
                     FireMessageEvent(sender, new Message
                     {
-                        Content = args.Packet.Data,
+                        Content = args.Message,
                         MessageType = MessageType.FromService
                     });
                     break;
@@ -130,14 +111,14 @@ namespace NTier.NET.Client
                         switch (_parameters.RegisterType)
                         {
                             case RegisterType.Service:
-                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
+                                await _client.SendAsync(JsonConvert.SerializeObject(new Register
                                 {
                                     MessageType = MessageType.FromService,
                                     RegisterType = _parameters.RegisterType
                                 }));
                                 break;
                             case RegisterType.Provider:
-                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
+                                await _client.SendAsync(JsonConvert.SerializeObject(new Register
                                 {
                                     MessageType = MessageType.FromProvider,
                                     RegisterType = _parameters.RegisterType
@@ -149,8 +130,6 @@ namespace NTier.NET.Client
                     });
                     break;
                 case ConnectionEventType.Disconnect:
-                    break;
-                case ConnectionEventType.Connecting:
                     break;
                 default:
                     break;

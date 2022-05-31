@@ -18,6 +18,7 @@
 		<group targetFramework="net6.0">
 			<dependency id="NTier.NET.Core" version="[6.0,6.1)" />
 			<dependency id="Tcp.NET.Server" version="[6.0,6.1)" />
+			<dependency id="Newtonsoft.Json" version="[13,14)" />
 		</group>
     </dependencies>
   </metadata>

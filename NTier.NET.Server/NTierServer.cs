@@ -18,21 +18,16 @@ namespace NTier.NET.Server
     public class NTierServer : INTierServer
     {
         protected readonly ITcpNETServer _server;
-        protected readonly ConcurrentQueue<IConnectionTcpServer> _connectionsToServices =
-            new ConcurrentQueue<IConnectionTcpServer>();
-        protected readonly ConcurrentBag<IConnectionTcpServer> _connectionsToProviders =
-            new ConcurrentBag<IConnectionTcpServer>();
-        protected readonly ConcurrentDictionary<int, IConnectionTcpServer> _connectionsUnregistered =
-            new ConcurrentDictionary<int, IConnectionTcpServer>();
+        protected readonly ConcurrentQueue<ConnectionTcpServer> _connectionsToServices =
+            new ConcurrentQueue<ConnectionTcpServer>();
+        protected readonly ConcurrentBag<ConnectionTcpServer> _connectionsToProviders =
+            new ConcurrentBag<ConnectionTcpServer>();
+        protected readonly ConcurrentDictionary<string, ConnectionTcpServer> _connectionsUnregistered =
+            new ConcurrentDictionary<string, ConnectionTcpServer>();
 
         public NTierServer(INTierServerParams parameters)
         {
-            _server = new TcpNETServer(new ParamsTcpServer
-            {
-                ConnectionSuccessString = parameters.ConnectionSuccessString,
-                EndOfLineCharacters = "\r\n",
-                Port = parameters.Port
-            });
+            _server = new TcpNETServer(new ParamsTcpServer(parameters.Port, "\r\n", parameters.ConnectionSuccessString));
             _server.ConnectionEvent += OnConnectionEvent;
             _server.ErrorEvent += OnErrorEvent;
             _server.MessageEvent += OnMessageEvent;
@@ -58,10 +53,10 @@ namespace NTier.NET.Server
                 case MessageEventType.Receive:
                     try
                     {
-                        if (_connectionsUnregistered.TryRemove(args.Connection.Client.GetHashCode(), out var tcpClient))
+                        if (_connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var tcpClient))
                         {
                             // Register the connection if it is new
-                            var registerDTO = JsonConvert.DeserializeObject<Register>(args.Packet.Data);
+                            var registerDTO = JsonConvert.DeserializeObject<Register>(args.Message);
 
                             switch (registerDTO.RegisterType)
                             {
@@ -78,7 +73,7 @@ namespace NTier.NET.Server
                         else
                         {
                             // When a Provider sends a message to the cache, round-robin send it to the processing server
-                            var deserialized = JsonConvert.DeserializeObject<Message>(args.Packet.Data);
+                            var deserialized = JsonConvert.DeserializeObject<Message>(args.Message);
 
                             switch (deserialized.MessageType)
                             {
@@ -88,7 +83,7 @@ namespace NTier.NET.Server
                                         _connectionsToServices.Enqueue(connectionService);
                                         Task.Run(async () =>
                                         {
-                                            await _server.SendToConnectionAsync(args.Packet, connectionService);
+                                            await _server.SendToConnectionAsync(args.Message, connectionService);
                                         });
                                     }
                                     break;
@@ -97,7 +92,7 @@ namespace NTier.NET.Server
                                     {
                                         Task.Run(async () =>
                                         {
-                                            await _server.SendToConnectionAsync(args.Packet, connectionToProvider);
+                                            await _server.SendToConnectionAsync(args.Message, connectionToProvider);
                                         });
                                     }
                                     break;
@@ -121,12 +116,10 @@ namespace NTier.NET.Server
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
-                    _connectionsUnregistered.TryAdd(args.Connection.Client.GetHashCode(), args.Connection);
+                    _connectionsUnregistered.TryAdd(args.Connection.ConnectionId, args.Connection);
                     break;
                 case ConnectionEventType.Disconnect:
-                    _connectionsUnregistered.TryRemove(args.Connection.Client.GetHashCode(), out var _);
-                    break;
-                case ConnectionEventType.Connecting:
+                    _connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var _);
                     break;
                 default:
                     break;
