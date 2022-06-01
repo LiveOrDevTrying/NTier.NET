@@ -1,17 +1,15 @@
-﻿using NTier.NET.Core.Events;
-using System;
-using System.Threading.Tasks;
+﻿using NTier.NET.Client.Events;
+using PHS.Networking.Services;
+using Tcp.NET.Core.Models;
 
 namespace NTier.NET.Client
 {
-    public interface INTierClient : IDisposable
+    public interface INTierClient : 
+        ICoreNetworkingClient<
+            NTierConnectionClientEventArgs,
+            NTierMessageClientEventArgs,
+            NTierErrorClientEventArgs,
+            ConnectionTcp>
     {
-        event MessageEventHandler MessageEvent;
-
-        Task StartAsync();
-        Task StopAsync();
-
-        Task SendToServerAsync<T>(T instance) where T : class;
-        Task SendToServerAsync(string message);
     }
 }

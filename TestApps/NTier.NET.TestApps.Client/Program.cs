@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using NTier.NET.Client;
+﻿using NTier.NET.Client;
+using NTier.NET.Client.Events;
 using NTier.NET.Client.Models;
 using NTier.NET.Core.Enums;
-using NTier.NET.Core.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -11,7 +10,7 @@ namespace NTier.NET.TestApps.Client
     class Program
     {
         private static INTierClient _client;
-        private static IParamsNTierClient _parameters;
+        private static ParamsNTierClient _parameters;
 
         static async Task Main(string[] args)
         {
@@ -80,26 +79,21 @@ namespace NTier.NET.TestApps.Client
             {
                 if (_client != null)
                 {
-                    _client.MessageEvent -= OnNTierMessageEventAsync;
+                    _client.MessageEvent -= OnNTierMessageEvent;
                     _client.Dispose();
                     _client = null;
                 }
 
-                _parameters = new ParamsNTierClient
-                {
-                    Port = 9345,
-                    ReconnectIntervalSec = 12,
-                    Uri = "localhost",
-                    RegisterType = (RegisterType)selection
-                };
+                _parameters = new ParamsNTierClient("localhost", 9345, (RegisterType)selection, "\r\n", false);
 
                 _client = new NTierClient(_parameters);
-                _client.MessageEvent += OnNTierMessageEventAsync;
-                await _client.StartAsync();
+                _client.MessageEvent += OnNTierMessageEvent;
+                await _client.ConnectAsync();
             }
 
             await MenuAsync();
         }
+
         static async Task CreateMessageAsync()
         {
             Console.WriteLine("Enter message:");
@@ -108,7 +102,7 @@ namespace NTier.NET.TestApps.Client
             {
                 var line = Console.ReadLine();
 
-                await _client.SendToServerAsync(line);
+                await _client.SendAsync(line);
 
                 Console.WriteLine("Message sent successfully");
             }
@@ -118,16 +112,25 @@ namespace NTier.NET.TestApps.Client
             await MenuAsync();
         }
 
-        private static void OnNTierMessageEventAsync(object sender, string message)
+        private static void OnNTierMessageEvent(object sender, NTierMessageClientEventArgs args)
         {
-            Console.WriteLine(message);
-
-            if (_parameters.RegisterType == RegisterType.Service) 
+            switch (args.MessageEventType)
             {
-                Task.Run(async () =>
-                {
-                    await _client.SendToServerAsync(message);
-                });
+                case PHS.Networking.Enums.MessageEventType.Sent:
+                    break;
+                case PHS.Networking.Enums.MessageEventType.Receive:
+                    Console.WriteLine(args.Message);
+
+                    if (_parameters.RegisterType == RegisterType.Service)
+                    {
+                        Task.Run(async () =>
+                        {
+                            await _client.SendAsync(args.Message);
+                        });
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }
