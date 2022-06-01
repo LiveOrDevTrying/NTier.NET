@@ -11,9 +11,9 @@ namespace NTier.NET.Server.Handlers
 {
     public class NTierHandler :
         TcpHandlerServerBase<
-            NTierServerConnectionEventArgs,
-            NTierServerMessageEventArgs,
-            NTierServerErrorEventArgs,
+            NTierConnectionServerEventArgs,
+            NTierMessageServerEventArgs,
+            NTierErrorServerEventArgs,
             ParamsTcpServer,
             NTierConnection>
     {
@@ -35,18 +35,18 @@ namespace NTier.NET.Server.Handlers
             };
         }
 
-        protected override NTierServerConnectionEventArgs CreateConnectionEventArgs(ConnectionEventArgs<NTierConnection> args)
+        protected override NTierConnectionServerEventArgs CreateConnectionEventArgs(ConnectionEventArgs<NTierConnection> args)
         {
-            return new NTierServerConnectionEventArgs
+            return new NTierConnectionServerEventArgs
             {
                 Connection = args.Connection,
                 ConnectionEventType = args.ConnectionEventType
             };
         }
 
-        protected override NTierServerErrorEventArgs CreateErrorEventArgs(ErrorEventArgs<NTierConnection> args)
+        protected override NTierErrorServerEventArgs CreateErrorEventArgs(ErrorEventArgs<NTierConnection> args)
         {
-            return new NTierServerErrorEventArgs
+            return new NTierErrorServerEventArgs
             {
                 Connection = args.Connection,
                 Exception = args.Exception,
@@ -54,9 +54,9 @@ namespace NTier.NET.Server.Handlers
             };
         }
 
-        protected override NTierServerMessageEventArgs CreateMessageEventArgs(TcpMessageServerBaseEventArgs<NTierConnection> args)
+        protected override NTierMessageServerEventArgs CreateMessageEventArgs(TcpMessageServerBaseEventArgs<NTierConnection> args)
         {
-            return new NTierServerMessageEventArgs
+            return new NTierMessageServerEventArgs
             {
                 Bytes = args.Bytes,
                 Connection = args.Connection,

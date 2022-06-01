@@ -79,7 +79,9 @@ namespace NTier.NET.TestApps.Client
             {
                 if (_client != null)
                 {
+                    _client.ConnectionEvent -= OnNTierConnectionEvent;
                     _client.MessageEvent -= OnNTierMessageEvent;
+                    _client.ErrorEvent -= OnNTierErrorEvent;
                     _client.Dispose();
                     _client = null;
                 }
@@ -87,31 +89,19 @@ namespace NTier.NET.TestApps.Client
                 _parameters = new ParamsNTierClient("localhost", 9345, (RegisterType)selection, "\r\n", false);
 
                 _client = new NTierClient(_parameters);
+                _client.ConnectionEvent += OnNTierConnectionEvent;
                 _client.MessageEvent += OnNTierMessageEvent;
+                _client.ErrorEvent += OnNTierErrorEvent;
                 await _client.ConnectAsync();
             }
 
             await MenuAsync();
         }
 
-        static async Task CreateMessageAsync()
+        private static void OnNTierConnectionEvent(object sender, NTierConnectionClientEventArgs args)
         {
-            Console.WriteLine("Enter message:");
-
-            try
-            {
-                var line = Console.ReadLine();
-
-                await _client.SendAsync(line);
-
-                Console.WriteLine("Message sent successfully");
-            }
-            catch
-            { }
-
-            await MenuAsync();
+            Console.WriteLine(args.ConnectionEventType);
         }
-
         private static void OnNTierMessageEvent(object sender, NTierMessageClientEventArgs args)
         {
             switch (args.MessageEventType)
@@ -132,6 +122,28 @@ namespace NTier.NET.TestApps.Client
                 default:
                     break;
             }
+        }
+        private static void OnNTierErrorEvent(object sender, NTierErrorClientEventArgs args)
+        {
+            Console.WriteLine(args.Message);
+        }
+
+        static async Task CreateMessageAsync()
+        {
+            Console.WriteLine("Enter message:");
+
+            try
+            {
+                var line = Console.ReadLine();
+
+                await _client.SendAsync(line);
+
+                Console.WriteLine("Message sent successfully");
+            }
+            catch
+            { }
+
+            await MenuAsync();
         }
     }
 }

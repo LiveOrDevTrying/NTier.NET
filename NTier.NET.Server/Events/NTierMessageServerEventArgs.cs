@@ -3,7 +3,7 @@ using Tcp.NET.Server.Events.Args;
 
 namespace NTier.NET.Server.Events
 {
-    public class NTierServerMessageEventArgs : TcpMessageServerBaseEventArgs<NTierConnection>
+    public class NTierMessageServerEventArgs : TcpMessageServerBaseEventArgs<NTierConnection>
     {
     }
 }

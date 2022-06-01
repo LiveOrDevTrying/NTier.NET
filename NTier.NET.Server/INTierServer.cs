@@ -5,9 +5,9 @@ using PHS.Networking.Server.Services;
 namespace NTier.NET.Server
 {
     public interface INTierServer : ICoreNetworkingServer<
-            NTierServerConnectionEventArgs,
-            NTierServerMessageEventArgs,
-            NTierServerErrorEventArgs,
+            NTierConnectionServerEventArgs,
+            NTierMessageServerEventArgs,
+            NTierErrorServerEventArgs,
             NTierConnection>
     {
     }
