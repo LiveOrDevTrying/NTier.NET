@@ -1,50 +1,76 @@
 ﻿using Newtonsoft.Json;
 using NTier.NET.Core.Enums;
 using NTier.NET.Core.Models;
+using NTier.NET.Server.Events;
+using NTier.NET.Server.Handlers;
+using NTier.NET.Server.Managers;
 using NTier.NET.Server.Models;
 using PHS.Networking.Enums;
-using PHS.Networking.Models;
-using PHS.Networking.Server.Enums;
-using PHS.Networking.Server.Events.Args;
-using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using Tcp.NET.Server;
-using Tcp.NET.Server.Events.Args;
 using Tcp.NET.Server.Models;
 
 namespace NTier.NET.Server
 {
-    public class NTierServer : INTierServer
+    public class NTierServer : 
+        TcpNETServerBase<
+            NTierServerConnectionEventArgs, 
+            NTierServerMessageEventArgs, 
+            NTierServerErrorEventArgs,
+            ParamsTcpServer,
+            NTierHandler,
+            NTierConnectionManager,
+            NTierConnection>, 
+        INTierServer
     {
-        protected readonly ITcpNETServer _server;
-        protected readonly ConcurrentQueue<ConnectionTcpServer> _connectionsToServices =
-            new ConcurrentQueue<ConnectionTcpServer>();
-        protected readonly ConcurrentBag<ConnectionTcpServer> _connectionsToProviders =
-            new ConcurrentBag<ConnectionTcpServer>();
-        protected readonly ConcurrentDictionary<string, ConnectionTcpServer> _connectionsUnregistered =
-            new ConcurrentDictionary<string, ConnectionTcpServer>();
+        protected readonly ConcurrentBag<NTierConnection> _connections =
+            new ConcurrentBag<NTierConnection>();
 
-        public NTierServer(INTierServerParams parameters)
+        public NTierServer(ParamsTcpServer parameters) : base(parameters)
         {
-            _server = new TcpNETServer(new ParamsTcpServer(parameters.Port, "\r\n", parameters.ConnectionSuccessString));
-            _server.ConnectionEvent += OnConnectionEvent;
-            _server.ErrorEvent += OnErrorEvent;
-            _server.MessageEvent += OnMessageEvent;
-            _server.ServerEvent += OnServerEvent;
         }
 
-        public virtual void Start()
+        public NTierServer(ParamsTcpServer parameters, byte[] certificate, string certificatePassword) : base(parameters, certificate, certificatePassword)
         {
-            _server.Start();
         }
 
-        public virtual void Stop()
+        protected override NTierConnectionManager CreateConnectionManager()
         {
-            _server.Stop();
+            return new NTierConnectionManager();
         }
 
-        protected virtual void OnMessageEvent(object sender, TcpMessageServerEventArgs args)
+        protected override NTierHandler CreateHandler(byte[] certificate = null, string certificatePassword = null)
+        {
+            return certificate == null || certificate.Length <= 0 || certificate.All(x => x == 0) ?
+                new NTierHandler(_parameters) :
+                new NTierHandler(_parameters, certificate, certificatePassword);
+        }
+
+        protected override void OnConnectionEvent(object sender, NTierServerConnectionEventArgs args)
+        {
+            switch (args.ConnectionEventType)
+            {
+                case ConnectionEventType.Connected:
+                    _connectionManager.Add(args.Connection.ConnectionId, args.Connection);
+                    break;
+                case ConnectionEventType.Disconnect:
+                    _connectionManager.Remove(args.Connection.ConnectionId);
+                    break;
+                default:
+                    break;
+            }
+
+            FireEvent(this, args);
+        }
+
+        protected override void OnErrorEvent(object sender, NTierServerErrorEventArgs args)
+        {
+            FireEvent(this, args);
+        }
+
+        protected override void OnMessageEvent(object sender, NTierServerMessageEventArgs args)
         {
             switch (args.MessageEventType)
             {
@@ -53,46 +79,47 @@ namespace NTier.NET.Server
                 case MessageEventType.Receive:
                     try
                     {
-                        if (_connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var tcpClient))
+                        if (!_connectionManager.Get(args.Connection.ConnectionId, out var connection))
+                        {
+                            return;
+                        }
+
+                        if (connection.RegisterType == null)
                         {
                             // Register the connection if it is new
-                            var registerDTO = JsonConvert.DeserializeObject<Register>(args.Message);
+                            var deserialized = JsonConvert.DeserializeObject<Register>(args.Message);
+                            connection.RegisterType = deserialized.RegisterType;
 
-                            switch (registerDTO.RegisterType)
+                            if (connection.RegisterType == RegisterType.Service)
                             {
-                                case RegisterType.Service:
-                                    _connectionsToServices.Enqueue(args.Connection);
-                                    break;
-                                case RegisterType.Provider:
-                                    _connectionsToProviders.Add(args.Connection);
-                                    break;
-                                default:
-                                    break;
+                                _connectionManager.QueueServiceConnection(connection);
                             }
                         }
                         else
                         {
                             // When a Provider sends a message to the cache, round-robin send it to the processing server
-                            var deserialized = JsonConvert.DeserializeObject<Message>(args.Message);
 
-                            switch (deserialized.MessageType)
+                            switch (args.Connection.RegisterType.Value)
                             {
-                                case MessageType.FromProvider:
-                                    if (_connectionsToServices.TryDequeue(out var connectionService))
+                                case RegisterType.Service:
+                                    foreach (var connectionProvider in _connectionManager.GetAll())
                                     {
-                                        _connectionsToServices.Enqueue(connectionService);
-                                        Task.Run(async () =>
+                                        if (connectionProvider.RegisterType == RegisterType.Provider)
                                         {
-                                            await _server.SendToConnectionAsync(args.Message, connectionService);
-                                        });
+                                            Task.Run(async () =>
+                                            {
+                                                await SendToConnectionAsync(args.Message, connectionProvider);
+                                            });
+                                        }
                                     }
                                     break;
-                                case MessageType.FromService:
-                                    foreach (var connectionToProvider in _connectionsToProviders)
+                                case RegisterType.Provider:
+                                    if (_connectionManager.DequeueServiceConnection(out var connectionService))
                                     {
+                                        _connectionManager.QueueServiceConnection(connectionService);
                                         Task.Run(async () =>
                                         {
-                                            await _server.SendToConnectionAsync(args.Message, connectionToProvider);
+                                            await SendToConnectionAsync(args.Message, connectionService);
                                         });
                                     }
                                     break;
@@ -106,48 +133,6 @@ namespace NTier.NET.Server
                     break;
                 default:
                     break;
-            }
-        }
-        protected virtual void OnErrorEvent(object sender, TcpErrorServerEventArgs args)
-        {
-        }
-        protected virtual void OnConnectionEvent(object sender, TcpConnectionServerEventArgs args)
-        {
-            switch (args.ConnectionEventType)
-            {
-                case ConnectionEventType.Connected:
-                    _connectionsUnregistered.TryAdd(args.Connection.ConnectionId, args.Connection);
-                    break;
-                case ConnectionEventType.Disconnect:
-                    _connectionsUnregistered.TryRemove(args.Connection.ConnectionId, out var _);
-                    break;
-                default:
-                    break;
-            }
-        }
-        protected virtual void OnServerEvent(object sender, ServerEventArgs args)
-        {
-            switch (args.ServerEventType)
-            {
-                case ServerEventType.Start:
-                    break;
-                case ServerEventType.Stop:
-                    while (_connectionsToServices.TryDequeue(out var _)) { }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        public virtual void Dispose()
-        {
-            if (_server != null)
-            {
-                _server.ConnectionEvent -= OnConnectionEvent;
-                _server.ErrorEvent -= OnErrorEvent;
-                _server.MessageEvent -= OnMessageEvent;
-                _server.ServerEvent -= OnServerEvent;
-                _server.Dispose();
             }
         }
     }

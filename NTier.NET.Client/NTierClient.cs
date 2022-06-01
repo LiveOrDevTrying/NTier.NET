@@ -59,25 +59,7 @@ namespace NTier.NET.Client
         {
             if (_client.IsRunning)
             {
-                switch (_parameters.RegisterType)
-                {
-                    case RegisterType.Service:
-                        await _client.SendAsync(JsonConvert.SerializeObject(new Message
-                        {
-                            MessageType = MessageType.FromService,
-                            Content = message
-                        }));
-                        break;
-                    case RegisterType.Provider:
-                        await _client.SendAsync(JsonConvert.SerializeObject(new Message
-                        {
-                            MessageType = MessageType.FromProvider,
-                            Content = message
-                        }));
-                        break;
-                    default:
-                        break;
-                }
+                await _client.SendAsync(message);
             }
         }
 
@@ -88,11 +70,7 @@ namespace NTier.NET.Client
                 case MessageEventType.Sent:
                     break;
                 case MessageEventType.Receive:
-                    FireMessageEvent(sender, new Message
-                    {
-                        Content = args.Message,
-                        MessageType = MessageType.FromService
-                    });
+                    FireMessageEvent(sender, args.Message);
                     break;
                 default:
                     break;
@@ -108,25 +86,10 @@ namespace NTier.NET.Client
                 case ConnectionEventType.Connected:
                     Task.Run(async () =>
                     {
-                        switch (_parameters.RegisterType)
+                        await _client.SendAsync(JsonConvert.SerializeObject(new Register
                         {
-                            case RegisterType.Service:
-                                await _client.SendAsync(JsonConvert.SerializeObject(new Register
-                                {
-                                    MessageType = MessageType.FromService,
-                                    RegisterType = _parameters.RegisterType
-                                }));
-                                break;
-                            case RegisterType.Provider:
-                                await _client.SendAsync(JsonConvert.SerializeObject(new Register
-                                {
-                                    MessageType = MessageType.FromProvider,
-                                    RegisterType = _parameters.RegisterType
-                                }));
-                                break;
-                            default:
-                                break;
-                        }
+                            RegisterType = _parameters.RegisterType
+                        }));
                     });
                     break;
                 case ConnectionEventType.Disconnect:
@@ -157,7 +120,7 @@ namespace NTier.NET.Client
                 });
             }
         }
-        protected virtual void FireMessageEvent(object sender, IMessage message)
+        protected virtual void FireMessageEvent(object sender, string message)
         {
             _messageEvent?.Invoke(sender, message);
         }
