@@ -8,11 +8,11 @@ namespace NTier.NET.TestApps.Server
 {
     class Program
     {
-        private static INTierServer _server;
+        private static INTierServerAuth<Guid> _server;
 
         static void Main(string[] args)
         {
-            _server = new NTierServer(new ParamsTcpServer(9345, "\r\n", "You have connected to NTier.NET successfully."));
+            _server = new NTierServerAuth<Guid>(new ParamsTcpServerAuth(9345, "\r\n", "You have connected to NTier.NET successfully.", "Unauthorized"), new MockUserService());
             _server.Start();
 
             while (true)

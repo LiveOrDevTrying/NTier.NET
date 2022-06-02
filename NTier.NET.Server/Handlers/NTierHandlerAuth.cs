@@ -6,6 +6,7 @@ using PHS.Networking.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Tcp.NET.Core.Models;
 using Tcp.NET.Server.Events.Args;
 using Tcp.NET.Server.Handlers;
 using Tcp.NET.Server.Models;
@@ -50,7 +51,7 @@ namespace NTier.NET.Server.Handlers
             };
         }
 
-        protected override NTierConnectionAuth<T> CreateConnection(ConnectionTcpClient connection)
+        protected override NTierConnectionAuth<T> CreateConnection(ConnectionTcp connection)
         {
             return new NTierConnectionAuth<T>
             {

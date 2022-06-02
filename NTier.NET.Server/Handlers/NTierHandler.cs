@@ -1,8 +1,8 @@
 ﻿using NTier.NET.Server.Events;
 using NTier.NET.Server.Models;
 using PHS.Networking.Events.Args;
-using PHS.Networking.Models;
 using System;
+using Tcp.NET.Core.Models;
 using Tcp.NET.Server.Events.Args;
 using Tcp.NET.Server.Handlers;
 using Tcp.NET.Server.Models;
@@ -25,7 +25,7 @@ namespace NTier.NET.Server.Handlers
         {
         }
 
-        protected override NTierConnection CreateConnection(ConnectionTcpClient connection)
+        protected override NTierConnection CreateConnection(ConnectionTcp connection)
         {
             return new NTierConnection
             {

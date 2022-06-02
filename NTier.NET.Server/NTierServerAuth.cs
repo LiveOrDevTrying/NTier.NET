@@ -31,7 +31,8 @@ namespace NTier.NET.Server
             NTierConnectionAuth<T>,
             T,
             NTierAuthorizeEventArgs<T>,
-            Register>
+            Register>,
+        INTierServerAuth<T>
     {
         public NTierServerAuth(ParamsTcpServerAuth parameters, IUserService<T> userService) : base(parameters, userService)
         {

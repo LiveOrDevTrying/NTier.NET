@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using NTier.NET.Core.Enums;
 using NTier.NET.Core.Models;
-using NTier.NET.Server.Events;
-using NTier.NET.Server.Handlers;
 using NTier.NET.Server.Managers;
 using NTier.NET.Server.Models;
 using PHS.Networking.Enums;

@@ -86,7 +86,7 @@ namespace NTier.NET.TestApps.Client
                     _client = null;
                 }
 
-                _parameters = new ParamsNTierClient("localhost", 9345, (RegisterType)selection, "\r\n", false);
+                _parameters = new ParamsNTierClient("localhost", 9345, (RegisterType)selection, "\r\n", false, "testToken");
 
                 _client = new NTierClient(_parameters);
                 _client.ConnectionEvent += OnNTierConnectionEvent;
