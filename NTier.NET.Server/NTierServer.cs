@@ -49,5 +49,25 @@ namespace NTier.NET.Server
                 Message = args.Message
             };
         }
+
+        protected override NTierConnectionServerEventArgs CreateConnectionEventArgs(TcpConnectionServerBaseEventArgs<NTierConnection> args)
+        {
+            return new NTierConnectionServerEventArgs
+            {
+                Connection = args.Connection,
+                ConnectionEventType = args.ConnectionEventType
+            };
+        }
+
+        protected override NTierMessageServerEventArgs CreateMessageEventArgs(TcpMessageServerBaseEventArgs<NTierConnection> args)
+        {
+            return new NTierMessageServerEventArgs
+            {
+                Bytes = args.Bytes,
+                Connection = args.Connection,
+                Message = args.Message,
+                MessageEventType = args.MessageEventType
+            };
+        }
     }
 }

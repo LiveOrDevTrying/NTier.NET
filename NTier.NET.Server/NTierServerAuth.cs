@@ -1,20 +1,10 @@
-﻿using Newtonsoft.Json;
-using NTier.NET.Core.Enums;
-using NTier.NET.Core.Models;
+﻿using NTier.NET.Core.Models;
 using NTier.NET.Server.Events;
 using NTier.NET.Server.Handlers;
 using NTier.NET.Server.Managers;
 using NTier.NET.Server.Models;
-using PHS.Networking.Enums;
-using PHS.Networking.Models;
-using PHS.Networking.Server.Enums;
-using PHS.Networking.Server.Events.Args;
 using PHS.Networking.Server.Services;
-using System;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
-using Tcp.NET.Server;
 using Tcp.NET.Server.Events.Args;
 using Tcp.NET.Server.Models;
 
@@ -61,6 +51,26 @@ namespace NTier.NET.Server
                 Connection = args.Connection,
                 Exception = args.Exception,
                 Message = args.Message
+            };
+        }
+
+        protected override NTierConnectionServerAuthEventArgs<T> CreateConnectionEventArgs(TcpConnectionServerBaseEventArgs<NTierConnectionAuth<T>> args)
+        {
+            return new NTierConnectionServerAuthEventArgs<T>
+            {
+                Connection = args.Connection,
+                ConnectionEventType = args.ConnectionEventType
+            };
+        }
+
+        protected override NTierMessageServerAuthEventArgs<T> CreateMessageEventArgs(TcpMessageServerBaseEventArgs<NTierConnectionAuth<T>> args)
+        {
+            return new NTierMessageServerAuthEventArgs<T>
+            {
+                Bytes = args.Bytes,
+                Connection = args.Connection,
+                Message = args.Message,
+                MessageEventType = args.MessageEventType
             };
         }
     }
