@@ -9,6 +9,6 @@
     public enum RegisterType
     {
         Service,
-        Provider,
+        Provider
     }
 }

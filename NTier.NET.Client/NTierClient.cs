@@ -1,161 +1,99 @@
 ﻿using Newtonsoft.Json;
+using NTier.NET.Client.Events;
+using NTier.NET.Client.Handlers;
 using NTier.NET.Client.Models;
-using NTier.NET.Core.Enums;
-using NTier.NET.Core.Events;
 using NTier.NET.Core.Models;
 using PHS.Networking.Enums;
-using PHS.Networking.Models;
 using System.Threading;
 using System.Threading.Tasks;
 using Tcp.NET.Client;
-using Tcp.NET.Client.Events.Args;
-using Tcp.NET.Client.Models;
+using Tcp.NET.Core.Events.Args;
+using Tcp.NET.Core.Models;
 
 namespace NTier.NET.Client
 {
-    public class NTierClient : INTierClient
+    public class NTierClient : 
+        TcpNETClientBase<
+            NTierConnectionClientEventArgs,
+            NTierMessageClientEventArgs,
+            NTierErrorClientEventArgs,
+            ParamsNTierClient,
+            NTierClientHandler,
+            ConnectionTcp>,
+        INTierClient
     {
-        protected readonly ITcpNETClient _client;
-        protected readonly IParamsNTierClient _parameters;
         protected Timer _timer;
         protected bool _isTimerRunning;
 
-        private event MessageEventHandler _messageEvent;
-            
-        public NTierClient(IParamsNTierClient parameters, string oauthToken = "")
+        public NTierClient(ParamsNTierClient parameters) : base(parameters)
         {
-            _parameters = parameters;
-            _client = string.IsNullOrWhiteSpace(oauthToken)
-                ? new TcpNETClient(new ParamsTcpClient
-                {
-                    EndOfLineCharacters = "\r\n",
-                    Port = _parameters.Port,
-                    Uri = _parameters.Uri,
-                    IsSSL = _parameters.IsSSL
-                })
-                : new TcpNETClient(new ParamsTcpClient
-                {
-                    EndOfLineCharacters = "\r\n",
-                    Port = _parameters.Port,
-                    Uri = _parameters.Uri,
-                    IsSSL = _parameters.IsSSL
-                }, oauthToken: oauthToken);
-
-            _client.ConnectionEvent += OnConnectionEvent;
-            _client.ErrorEvent += OnErrorEvent;
-            _client.MessageEvent += OnMessageEvent;
         }
-        public virtual async Task StartAsync()
-        {
-            try
-            {
-                await _client.ConnectAsync();
 
-                if (_parameters.ReconnectIntervalSec > 0)
+        public override async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            var result = await base.ConnectAsync(cancellationToken);
+
+            if (_parameters.ReconnectIntervalSec > 0)
+            {
+                if (_timer != null)
                 {
-                    _timer = new Timer(OnTimerCallback, null, _parameters.ReconnectIntervalSec * 1000, _parameters.ReconnectIntervalSec * 1000);
+                    _timer.Dispose();
                 }
-            }
-            catch
-            { }
-        }
-        public virtual void Stop()
-        {
-            _client.Disconnect();
-        }
-        public virtual async Task SendToServerAsync<T>(T instance) where T : class
-        {
-            await SendToServerAsync(JsonConvert.SerializeObject(instance));
-        }
 
-        public virtual async Task SendToServerAsync(string message)
-        {
-            if (_client.IsRunning)
-            {
-                switch (_parameters.RegisterType)
-                {
-                    case RegisterType.Service:
-                        await _client.SendToServerAsync(new Packet
-                        {
-                            Data = JsonConvert.SerializeObject(new Message
-                            {
-                                MessageType = MessageType.FromService,
-                                Content = message
-                            })
-                        });
-                        break;
-                    case RegisterType.Provider:
-                        await _client.SendToServerAsync(new Packet
-                        {
-                            Data = JsonConvert.SerializeObject(new Message
-                            {
-                                MessageType = MessageType.FromProvider,
-                                Content = message
-                            })
-                        });
-                        break;
-                    default:
-                        break;
-                }
+                _timer = new Timer(OnTimerCallback, null, _parameters.ReconnectIntervalSec * 1000, _parameters.ReconnectIntervalSec * 1000);
             }
-        }
 
-        protected virtual void OnMessageEvent(object sender, TcpMessageClientEventArgs args)
+            return result;
+        }
+        protected override NTierClientHandler CreateTcpClientHandler()
         {
-            switch (args.MessageEventType)
+            return new NTierClientHandler(_parameters);
+        }
+        protected override void OnMessageEvent(object sender, TcpMessageEventArgs<ConnectionTcp> args)
+        {
+            FireEvent(this, new NTierMessageClientEventArgs
             {
-                case MessageEventType.Sent:
-                    break;
-                case MessageEventType.Receive:
-                    FireMessageEvent(sender, new Message
-                    {
-                        Content = args.Packet.Data,
-                        MessageType = MessageType.FromService
-                    });
-                    break;
-                default:
-                    break;
-            }
+                Bytes = args.Bytes,
+                Connection = args.Connection,
+                Message = args.Message,
+                MessageEventType = args.MessageEventType
+            });
         }
-        protected virtual void OnErrorEvent(object sender, TcpErrorClientEventArgs args)
+        protected override void OnErrorEvent(object sender, TcpErrorEventArgs<ConnectionTcp> args)
         {
+            FireEvent(this, new NTierErrorClientEventArgs
+            {
+                Connection = args.Connection,
+                Exception = args.Exception,
+                Message = args.Message
+            });
         }
-        protected virtual void OnConnectionEvent(object sender, TcpConnectionClientEventArgs args)
+        protected override void OnConnectionEvent(object sender, TcpConnectionEventArgs<ConnectionTcp> args)
         {
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
                     Task.Run(async () =>
                     {
-                        switch (_parameters.RegisterType)
+                        await SendAsync(JsonConvert.SerializeObject(new Register
                         {
-                            case RegisterType.Service:
-                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
-                                {
-                                    MessageType = MessageType.FromService,
-                                    RegisterType = _parameters.RegisterType
-                                }));
-                                break;
-                            case RegisterType.Provider:
-                                await _client.SendToServerRawAsync(JsonConvert.SerializeObject(new Register
-                                {
-                                    MessageType = MessageType.FromProvider,
-                                    RegisterType = _parameters.RegisterType
-                                }));
-                                break;
-                            default:
-                                break;
-                        }
+                            RegisterType = _parameters.RegisterType
+                        }));
                     });
                     break;
                 case ConnectionEventType.Disconnect:
                     break;
-                case ConnectionEventType.Connecting:
-                    break;
                 default:
                     break;
             }
+
+            FireEvent(this, new NTierConnectionClientEventArgs
+            {
+                Connection = args.Connection,
+                ConnectionEventType = args.ConnectionEventType
+            });
         }
+
         protected virtual void OnTimerCallback(object state)
         {
             if (!_isTimerRunning)
@@ -166,9 +104,9 @@ namespace NTier.NET.Client
                 {
                     try
                     {
-                        if (!_client.IsRunning)
+                        if (!IsRunning)
                         {
-                            await _client.ConnectAsync();
+                            await ConnectAsync();
                         }
                     }
                     catch
@@ -178,37 +116,15 @@ namespace NTier.NET.Client
                 });
             }
         }
-        protected virtual void FireMessageEvent(object sender, IMessage message)
-        {
-            _messageEvent?.Invoke(sender, message);
-        }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
-            if (_client != null)
-            {
-                _client.ConnectionEvent -= OnConnectionEvent;
-                _client.ErrorEvent -= OnErrorEvent;
-                _client.MessageEvent -= OnMessageEvent;
-                _client.Dispose();
-            }
-
             if (_timer != null)
             {
                 _timer.Dispose();
             }
-        }
 
-        public event MessageEventHandler MessageEvent
-        {
-            add
-            {
-                _messageEvent += value;
-            }
-            remove
-            {
-                _messageEvent -= value;
-            }
+            base.Dispose();
         }
     }
 }

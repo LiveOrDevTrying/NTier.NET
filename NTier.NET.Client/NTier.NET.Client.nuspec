@@ -18,6 +18,7 @@
 		<group targetFramework="netcoreapp3.0">
 			<dependency id="NTier.NET.Core" version="[3.0,3.1)" />
 			<dependency id="Tcp.NET.Client" version="[3.0,3.1)" />
+			<dependency id="Newtonsoft.Json" version="[13,14)" />
 		</group>
     </dependencies>
   </metadata>
