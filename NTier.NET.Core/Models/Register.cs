@@ -2,7 +2,7 @@
 
 namespace NTier.NET.Core.Models
 {
-    public class Register : NTierBase, IRegister
+    public class Register
     {
         public RegisterType RegisterType { get; set; }
     }
