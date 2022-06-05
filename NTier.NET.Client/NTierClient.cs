@@ -49,26 +49,7 @@ namespace NTier.NET.Client
         {
             return new NTierClientHandler(_parameters);
         }
-        protected override void OnMessageEvent(object sender, TcpMessageEventArgs<ConnectionTcp> args)
-        {
-            FireEvent(this, new NTierMessageClientEventArgs
-            {
-                Bytes = args.Bytes,
-                Connection = args.Connection,
-                Message = args.Message,
-                MessageEventType = args.MessageEventType
-            });
-        }
-        protected override void OnErrorEvent(object sender, TcpErrorEventArgs<ConnectionTcp> args)
-        {
-            FireEvent(this, new NTierErrorClientEventArgs
-            {
-                Connection = args.Connection,
-                Exception = args.Exception,
-                Message = args.Message
-            });
-        }
-        protected override void OnConnectionEvent(object sender, TcpConnectionEventArgs<ConnectionTcp> args)
+        protected override void OnConnectionEvent(object sender, NTierConnectionClientEventArgs args)
         {
             switch (args.ConnectionEventType)
             {
@@ -87,11 +68,7 @@ namespace NTier.NET.Client
                     break;
             }
 
-            FireEvent(this, new NTierConnectionClientEventArgs
-            {
-                Connection = args.Connection,
-                ConnectionEventType = args.ConnectionEventType
-            });
+            base.OnConnectionEvent(this, args);
         }
 
         protected virtual void OnTimerCallback(object state)
