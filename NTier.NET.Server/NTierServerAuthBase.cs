@@ -94,12 +94,12 @@ namespace NTier.NET.Server
                     }
                     catch (Exception ex)
                     {
-                        CreateErrorEventArgs(new TcpErrorServerBaseEventArgs<Z>
+                        FireEvent(this, CreateErrorEventArgs(new TcpErrorServerBaseEventArgs<Z>
                         {
                             Connection = args.Connection,
                             Exception = ex,
                             Message = ex.Message
-                        });
+                        }));
                     }
                     break;
                 default:
